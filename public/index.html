@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Car CRUD API</title>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.11.1/dist/cdn.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div x-data="carApp()" x-init="fetchCars()">
+    <!-- Most Popular Make -->
+    <button @click="fetchMostPopularMake()">Get Most Popular Make</button>
+    <div>
+      <h2>Most Popular Make:</h2>
+      <div x-text="mostPopularMake"></div>
+    </div>
+
+    <!-- Add Car -->
+    <h2>Add a Car:</h2>
+    <form @submit.prevent="addCar()">
+      <input type="text" x-model="newCar.color" placeholder="Color" required>
+      <input type="text" x-model="newCar.make" placeholder="Make" required>
+      <input type="text" x-model="newCar.model" placeholder="Model" required>
+      <input type="text" x-model="newCar.reg_number" placeholder="Registration Number" required>
+      <button type="submit">Add Car</button>
+    </form>
+
+    <!-- Delete Car -->
+    <h2>Delete a Car:</h2>
+    <form @submit.prevent="deleteCar()">
+      <input type="text" x-model="regNumberToDelete" placeholder="Registration Number to Delete" required>
+      <button type="submit">Delete Car</button>
+    </form>
+
+    <!-- Display All Cars -->
+    <h2>All Cars:</h2>
+    <ul>
+      <template x-for="car in cars" :key="car.reg_number">
+        <li>
+          <strong x-text="car.make"></strong> - <span x-text="car.model"></span> (Reg: <span x-text="car.reg_number"></span>, Color: <span x-text="car.color"></span>)
+        </li>
+      </template>
+    </ul>
+  </div>
+
+  <script>
+    function carApp() {
+      return {
+        cars: [], // Ensure cars is initialized as an empty array
+        mostPopularMake: '',
+        newCar: {
+          color: '',
+          make: '',
+          model: '',
+          reg_number: ''
+        },
+        regNumberToDelete: '',
+
+        // Fetch the list of all cars
+        fetchCars() {
+          axios.get('/api/cars')
+            .then(response => {
+              this.cars = response.data;
+            })
+            .catch(error => {
+              console.error('Error fetching cars:', error);
+            });
+        },
+
+        // Fetch the most popular make
+        fetchMostPopularMake() {
+          axios.get('/api/mostPopularMake')
+            .then(response => {
+              this.mostPopularMake = response.data.mostPopularMake;
+            })
+            .catch(error => {
+              console.error('Error fetching most popular make:', error);
+            });
+        },
+
+        // Add a new car
+        addCar() {
+          axios.post('/api/cars', this.newCar)
+            .then(() => {
+              this.fetchCars(); // Refresh the car list
+              this.newCar = { color: '', make: '', model: '', reg_number: '' }; // Reset form
+            })
+            .catch(error => {
+              console.error('Error adding car:', error);
+            });
+        },
+
+        // Delete a car
+        deleteCar() {
+          axios.delete(`/api/cars/${this.regNumberToDelete}`)
+            .then(() => {
+              this.fetchCars(); // Refresh the car list
+              this.regNumberToDelete = ''; // Reset input
+            })
+            .catch(error => {
+              console.error('Error deleting car:', error);
+            });
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>
